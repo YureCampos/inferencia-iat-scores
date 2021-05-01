@@ -6,7 +6,7 @@ output:
     code_folding: hide
 theme: sandstone
 params: 
-    arquivo_dados: "data/sdsu.csv"
+    arquivo_dados: "data/tamu.csv"
 ---
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
@@ -62,12 +62,34 @@ iat %>%
   labs(title = "Distribuição e média (ponto vermelho) de d_art na amostra")
 ```
 
+```{r}
+## Sumário de Dados
+sumario = iat %>% 
+    group_by(sex) %>% 
+    summarise(media = mean(d_art), 
+              mediana = median(d_art), 
+              desvio_padrao = sd(d_art), 
+              n_amostras = n(),
+              .groups = "drop")
+
+sumario
+
+n_total = sum(sumario %>% pull(n_amostras))
+n_total
+
+iat %>% 
+  count(sex) %>% 
+  mutate(percentual = round((n/n_total)*100, 1))
+
+```
+
+
 ##### Qual a diferença na amostra
 
 ```{r}
 agrupado = iat %>% 
     group_by(sex) %>% 
-    summarise(media = mean(d_art), 
+    summarise(media = mean(d_art),
               .groups = "drop")
 
 agrupado
@@ -117,7 +139,7 @@ ci %>%
     )) +
     geom_pointrange() +
     geom_point(size = 3) + 
-    scale_y_continuous(limits = c(-1.5, 1.5)) + 
+    scale_y_continuous(limits = c(-1.5, 1.5), breaks = c(-1,-0.65,-0.35,-0.15,0,0.15,0.35,0.65,1)) + 
     labs(x = "Diferença das médias", 
          y = "IAT homens - mulheres")
 ```
@@ -126,6 +148,14 @@ ci %>%
 p1 = iat %>% 
     ggplot(aes(x = sex, y = d_art)) +
     geom_quasirandom(width = .1, alpha = .7) + 
+    geom_hline(yintercept = 0.65, linetype=2, color = "red") +
+    geom_hline(yintercept = 0.35, linetype=2, color = "orange") +
+    geom_hline(yintercept = 0.15, linetype=2, color = "yellow") +
+    geom_hline(yintercept = 0, color = "lightblue") +
+    geom_hline(yintercept = -0.15, linetype=2, color = "yellow") +
+    geom_hline(yintercept = -0.35, linetype=2, color = "orange") +
+    geom_hline(yintercept = -0.65, linetype=2, color = "red") +
+    scale_y_continuous(limits = c(-1.5, 1.5), breaks = c(-1,-0.65,-0.35,-0.15,0,0.15,0.35,0.65,1)) + 
     stat_summary(geom = "point", fun = "mean", color = "red", size = 5)
 
 p2 = ci %>%
@@ -135,9 +165,16 @@ p2 = ci %>%
         ymin = conf.low,
         ymax = conf.high
     )) +
+    geom_hline(yintercept = 0.65, linetype=2, color = "red") +
+    geom_hline(yintercept = 0.35, linetype=2, color = "orange") +
+    geom_hline(yintercept = 0.15, linetype=2, color = "yellow") +
+    geom_hline(yintercept = 0, color = "lightblue") +
+    geom_hline(yintercept = -0.15, linetype=2, color = "yellow") +
+    geom_hline(yintercept = -0.35, linetype=2, color = "orange") +
+    geom_hline(yintercept = -0.65, linetype=2, color = "red") +
     geom_pointrange() +
     geom_point(size = 3) + 
-    ylim(-1, 1) + 
+    scale_y_continuous(limits = c(-1.5, 1.5), breaks = c(-1,-0.65,-0.35,-0.15,0,0.15,0.35,0.65,1)) +
     labs(x = "Diferença", 
          y = "IAT homens - mulheres")
 
@@ -145,16 +182,16 @@ grid.arrange(p1, p2, ncol = 2)
 
 ```
 
+### Observações
+
+Analisando os dados da *Texas A&M University* (**tamu.csv**), temos 179 respostas, sendo 121 do sexo feminino (67,6%) e 58 do masculino (32,4%), entretanto observamos que contém 13 ocorrências (7,3% do total) com valores de *d_art* maiores que +1, sendo 11 nas observações do sexo feminino e 2 do sexo masculino, o que pode indicar um falha haja visto que os valores devem estar situados entre -1 e +1. Para esta atividade, optamos por manter esses dados, mas seria importante investigar a causa.
+
 ### Conclusão
 
-**Apague esse parágrafo, e no seguinte substitua no mínimo as partes em negrito por texto seu. Pode substituir o quanto quiser**.
+Em média, as mulheres que participaram do experimento tiveram uma associação implícita (medida pelo IAT) com a aversão à matemática **positiva** e **média** (**média 0.420, desvio padrão 0.465, N = 121**). Homens também tiveram uma associação **positiva**, mas **pequena** com a aversão à matemática (**média 0.238, desvio padrão 0.452, N = 58**). 
 
-Em média, as mulheres que participaram do experimento tiveram uma associação implícita (medida pelo IAT) com a matemática **positiva/negativa** e **fraca/média/forte** (**média XXX, desv. padrão YYY, N = ZZZ**). Homens tiveram uma associação **positiva/negativa** com a matemática, portanto **maior/menor** que a das mulheres (**média XXX , desv. padrão YYY, N = ZZZ**). Houve portanto uma **grande/considerável/pequena/desprezível** diferença entre homens e mulheres (**diferença das médias XXXX, 95% CI [CCC, DDD]**). Os dados de nosso experimento portanto apontam que... **COMPLETE AQUI**.
+A diferença entre as médias foi pequena (**diferença das médias -0.184, 95% CI [-0.324, -0.048]**), sendo a média dos homens **menor** que a das mulheres (por isso o valor negativo). 
+
+Os dados de nosso experimento portanto apontam que ambos preteriam mais a matemática do que a arte, porém os homens têm uma ligeira menor rejeição à matemática em relação a arte do que as mulheres, entretanto como o intervalo de confiança da diferença ficou entre **-0.324 e -0.048** e o coeficiente de viés considerado "pequeno" é (pelo menos) -0.15, não podemos confirmar se essa diferença é relevante ou negligenciável, necessitando coletar mais dados para uma melhor investigação. Em suma, não há evidência clara de uma diferença relevante entre sexos: os dados apontam que ela pode não existir e, se ela existir, ela é pequena na direção da rejeição à matemática.
 
 --- 
-*Exemplos de possíveis conclusões para completar*
-
-  * mulheres têm uma associação negativa consideravelmente mais forte, com uma diferença que provavelmente está entre 0.6 e 1.0 ponto na escala IAT, o suficiente para diferenciar uma associação neutra de uma muito forte contra a matemática.
-  * mulheres têm uma associação negativa mais forte, porém não é claro se essa diferença é grande, moderada ou pequena. É necessário coletar mais dados para determinar se a diferença é relevante ou negligenciável. 
-  * mulheres podem ter um associação negativa forte, pode não haver diferença entre sexos ou homens podem ter atitudes negativas um pouco mais fortes ou moderadamente mais fortes. 
-  * não há evidência clara de uma diferença relevante entre sexos: os dados apontam que ela pode não existir e, se ela existir, ela é pequena em qualquer das direções. 
